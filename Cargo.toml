@@ -1,0 +1,6 @@
+[package]
+name = "tinyexpr"
+version = "0.1.0"
+authors = ["Krzysztof Kondrak <krzysztof.kondrak@gmail.com>"]
+
+[dependencies]
