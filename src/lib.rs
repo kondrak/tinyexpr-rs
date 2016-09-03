@@ -1,6 +1,9 @@
-#[cfg(test)]
-mod tests {
-    #[test]
-    fn it_works() {
-    }
+
+pub fn interp() {
+}
+
+pub fn compile() {
+}
+
+pub fn eval() {
 }
