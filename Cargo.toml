@@ -1,6 +1,12 @@
 [package]
 name = "tinyexpr"
 version = "0.1.0"
+description = "Tiny recursive descent expression parser, compiler, and evaluation engine for math expressions."
+keywords = ["tinyexpr", "math", "expression", "parser"]
+license = "MIT/Apache-2.0"
 authors = ["Krzysztof Kondrak <krzysztof.kondrak@gmail.com>"]
+repository = "https://github.com/kondrak/tinyexpr-rs"
+homepage = "https://github.com/kondrak/tinyexpr-rs"
+documentation = "https://docs.rs/tinyexpr"
 
 [dependencies]
