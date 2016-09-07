@@ -10,3 +10,4 @@ homepage = "https://github.com/kondrak/tinyexpr-rs"
 documentation = "https://docs.rs/tinyexpr"
 
 [dependencies]
+bitflags = "0.7"

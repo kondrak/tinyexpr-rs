@@ -43,11 +43,11 @@ struct State {
     pub value: f64,
 }
 
-fn find_lookup(s: &State, name: char) -> u8 {
+fn find_lookup(s: &State, txt: &String) -> u8 {
     0
 }
 
-fn find_builtin(name: char) -> u8 {
+fn find_builtin(txt: &String) -> u8 {
     0
 }
 
@@ -57,30 +57,40 @@ fn next_token(s: &mut State) -> Result<String> {
     let mut idx: usize = 0;
     
     while s.s_type == TokenType::Null {
-        if s.s_type == TokenType::End {
+        if idx == s.next.len() {
+            s.s_type = TokenType::End;
             break;
         }
 
-        let first_byte = s.next.as_bytes()[0];
+        let next_char = s.next.as_bytes()[idx] as char;
         // try reading a number
-        // 0-9 or .
-        if (first_byte >= 48 && first_byte < 57) || first_byte == 46 {
-            s.value  = try!(f64::from_str(&s.next));
+        if (next_char >= '0' && next_char <= '9') || next_char == '.' {
+            let mut num_str = String::new();
+            let mut c = next_char;
+
+            // extract the number part to separate string which we then convert to f64
+            while idx < s.next.len() && (next_char >= '0' && next_char <= '9') || c == '.' {
+                c = s.next.as_bytes()[idx] as char;
+                num_str.push(c);
+                idx += 1;
+            }
+            s.value  = try!(f64::from_str(&num_str));
             s.s_type = TokenType::Number;
         } else {
             // look for a variable or builting function call
-            // a-z
-            if first_byte >= 97 && first_byte <= 122 {
-                let mut start = s.next.as_bytes()[idx];
-                let mut c = start;
-                while (c >= 97 && c <= 122) || (c >= 48 && c <= 57) {
+            if next_char >= 'a' && next_char <= 'z' {
+                let mut txt_str = String::new();
+                let mut c = next_char;
+
+                while idx < s.next.len() && (next_char >= 'a' && next_char <= 'z') || (next_char >= '0' && next_char <= '9') {
+                    c = s.next.as_bytes()[idx] as char;
+                    txt_str.push(c);
                     idx += 1;
-                    c = s.next.as_bytes()[idx];
                 }
 
-                let mut var = find_lookup(&s, start as char);
+                let mut var = find_lookup(&s, &txt_str);
                 if var == 0 {
-                   var = find_builtin(start as char);
+                   var = find_builtin(&txt_str);
                 }
 
                 if var == 0 {
@@ -89,6 +99,7 @@ fn next_token(s: &mut State) -> Result<String> {
                     // todo
                 }
             } else {
+                // look for an operator or special character
                 match s.next.as_bytes()[idx] as char {
                     '+' => s.s_type = TokenType::Infix,
                     '-' => s.s_type = TokenType::Infix,
@@ -103,7 +114,6 @@ fn next_token(s: &mut State) -> Result<String> {
                       _ => s.s_type = TokenType::Error
                 }
                 idx += 1;
-                // look for an operator or special character
             }
         }
     }
