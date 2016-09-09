@@ -50,7 +50,18 @@ impl Variable {
             name: String::new(),
             address: 0,
             v_type: TE_VARIABLE,
-            context: 0
+            context: 0,
+        }
+    }
+}
+
+impl Clone for Variable {
+    fn clone(&self) -> Variable {
+        Variable {
+            name: self.name.clone(),
+            address: self.address,
+            v_type: self.v_type,
+            context: self.context
         }
     }
 }
@@ -62,7 +73,8 @@ struct State {
     pub value: f64,
     pub bound: i8,
     pub function: i8,
-    pub context: i8
+    pub context: i8,
+    pub lookup: Vec<Variable>,
 }
 
 impl State {
@@ -74,13 +86,20 @@ impl State {
             value: 0.0,
             bound: 0,
             function: 0,
-            context: 0
+            context: 0,
+            lookup: Vec::<Variable>::new()
         }
     }
 }
 
 fn find_lookup(s: &State, txt: &String) -> Option<Variable> {
-    Some(Variable::new())
+    for var in &s.lookup {
+        if &(*var.name) == txt {
+            return Some((*var).clone());
+        }
+    }
+    
+    None
 }
 
 fn find_builtin(s: &State, txt: &String) -> Option<Variable> {
