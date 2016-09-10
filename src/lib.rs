@@ -143,6 +143,14 @@ impl State {
     }
 }
 
+// todo
+fn new_expr(e_type: &ExprType) -> Expr {
+    let arity = arity!(*e_type);
+
+    // just create a new expression with new type based on old expression, no weird memcpy mumbo jumbo
+    Expr::new()
+}
+
 fn find_lookup(s: &State, txt: &str) -> Option<Variable> {
     for var in &s.lookup {
         if &(*var.name) == txt {
@@ -367,6 +375,7 @@ pub fn interp(expression: &str) -> Result<f64> {
     Err(error::TinyExprError::Other(String::from("NaN")))
 }
 
+// todo
 pub fn eval(n: &Expr) -> f64 {
     0.0
 }
