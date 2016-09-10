@@ -144,8 +144,8 @@ impl State {
 }
 
 // todo
-fn new_expr(e_type: &ExprType) -> Expr {
-    let arity = arity!(*e_type);
+fn new_expr(e_type: ExprType) -> Expr {
+    let arity = arity!(e_type);
 
     // just create a new expression with new type based on old expression, no weird memcpy mumbo jumbo
     Expr::new()
@@ -262,7 +262,81 @@ fn next_token(s: &mut State) -> Result<String> {
 }
 
 fn base(s: &mut State) -> Result<Expr> {
-    Ok(Expr::new())
+    let mut ret: Expr;
+
+    match type_mask!(s.s_type) {
+        TOK_NUMBER => {
+            ret = new_expr(TE_CONSTANT);
+            ret.value = s.value;
+            try!(next_token(s));
+        },
+        TOK_VARIABLE => {
+            ret = new_expr(TE_VARIABLE);
+            ret.bound = s.bound;
+            try!(next_token(s));
+        },
+        TE_FUNCTION0 | TE_CLOSURE0 => {
+            ret = new_expr(s.s_type);
+            ret.function = s.function;
+            // todo: set parameters
+            try!(next_token(s));
+            // todo: set parameters
+        },
+        TE_FUNCTION1 | TE_CLOSURE1 => {
+            ret = new_expr(s.s_type);
+            ret.function = s.function;
+            // todo: set parameters
+            try!(next_token(s));
+            // todo: set parameters
+        },
+        TE_FUNCTION2 | TE_CLOSURE2 | TE_FUNCTION3 |
+        TE_CLOSURE3 | TE_FUNCTION4 | TE_CLOSURE4 |
+        TE_FUNCTION5 | TE_CLOSURE5 | TE_FUNCTION6 |
+        TE_CLOSURE6 | TE_FUNCTION7 | TE_CLOSURE7 => {
+            let arity = arity!(s.s_type);
+
+            ret = new_expr(s.s_type);
+            ret.function = s.function;
+            // todo: set parameters
+            try!(next_token(s));
+
+            if s.s_type != TOK_OPEN {
+                s.s_type = TOK_ERROR;
+            } else {
+                let mut idx = 0;
+                for i in 0..arity {
+                    try!(next_token(s));
+                    // todo: set parameters
+                    if s.s_type != TOK_SEP {
+                        break;
+                    }
+                    idx += 1;
+                }
+                if s.s_type != TOK_CLOSE || (idx != arity-1) {
+                    s.s_type = TOK_ERROR;
+                } else {
+                    try!(next_token(s));
+                }
+            }
+        },
+        TOK_OPEN => {
+            try!(next_token(s));
+            ret = try!(list(s));
+            if s.s_type != TOK_CLOSE {
+                s.s_type = TOK_ERROR;
+            } else {
+                try!(next_token(s));
+            }
+        }
+        _ => {
+            // todo: better error? Use NaN?
+            ret = new_expr(TE_VARIABLE);
+            s.s_type = TOK_ERROR;
+            ret.value = 0.0;
+        }
+    }
+    
+    Ok(ret)
 }
 
 fn power(s: &mut State) -> Result<Expr> {
