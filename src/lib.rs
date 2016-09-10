@@ -5,8 +5,9 @@ use error::Result;
 use std::str::FromStr;
 
 bitflags! {
-    flags ExprType: u64 {
+    pub flags ExprType: u64 {
         const TE_VARIABLE = 0,
+        const TE_CONSTANT = 1,
         const TE_FUNCTION0 = 8,
         const TE_FUNCTION1 = 9,
         const TE_FUNCTION2 = 10,
@@ -33,10 +34,29 @@ bitflags! {
         const TOK_NUMBER = 30,
         const TOK_VARIABLE = 31,
         const TOK_INFIX = 32,
-        const T_MASK = 0x0000001F
+        const T_MASK =  0x0000001F
     }
 }
 
+macro_rules! type_mask {
+    ($x:expr) => ($x & T_MASK)
+}
+
+macro_rules! is_pure {
+    ($x:expr) => (($x & TE_FLAG_PURE).bits() != 0)
+}
+
+macro_rules! is_function {
+    ($x:expr) => (($x & TE_FUNCTION0).bits() != 0)
+}
+
+macro_rules! is_closure {
+    ($x:expr) => (($x & TE_CLOSURE0).bits() != 0)
+}
+
+macro_rules! arity {
+    ($x:expr) => (if($x & (TE_FUNCTION0 | TE_CLOSURE0)).bits() != 0 { $x.bits() & 0x00000007 } else { 0 })
+}
 
 // todo: function pointers?
 const FUNCTIONS: [&'static str; 21] = ["abs", "acos", "asin", "atan", "atan2", "ceil", "cos",
@@ -48,7 +68,27 @@ const FUNCTION_TYPES: [ExprType; 21] = [ TE_FUNCTION1, TE_FUNCTION1, TE_FUNCTION
                                          TE_FUNCTION1, TE_FUNCTION1, TE_FUNCTION1, TE_FUNCTION0,
                                          TE_FUNCTION2, TE_FUNCTION1, TE_FUNCTION1, TE_FUNCTION1,
                                          TE_FUNCTION1];
-struct Variable {
+pub struct Expr {
+    pub e_type: ExprType,
+    pub value: f64,
+    pub bound: i8,
+    pub function: i8,
+    pub parameters: i8
+}
+
+impl Expr {
+    fn new() -> Expr {
+        Expr {
+            e_type: TOK_NULL,
+            value: 0.0,
+            bound: 0,
+            function: 0,
+            parameters: 0,
+        }
+    }
+}
+
+pub struct Variable {
     pub name: String,
     pub address: i8,
     pub v_type: ExprType,
@@ -89,9 +129,9 @@ struct State {
 }
 
 impl State {
-    fn new() -> State {
+    fn new(expression: &str) -> State {
         State {
-            next: String::new(),
+            next: String::from(expression),
             s_type: TOK_NULL,
             n_idx: 0,
             value: 0.0,
@@ -165,7 +205,7 @@ fn next_token(s: &mut State) -> Result<String> {
                 }
 
                 if let Some(v) = var {
-                    match s.s_type & T_MASK {
+                    match type_mask!(s.s_type) {
                         TE_VARIABLE => { s.s_type = TOK_VARIABLE; s.bound = v.address; },
                         TE_CLOSURE0 => s.context = v.context,
                         TE_CLOSURE1 => s.context = v.context,
@@ -213,12 +253,120 @@ fn next_token(s: &mut State) -> Result<String> {
     Ok(String::new())
 }
 
-pub fn interp(expression: &str) -> Result<String> {
-    Ok(String::new())
+fn base(s: &mut State) -> Result<Expr> {
+    Ok(Expr::new())
 }
 
-pub fn compile() {
+fn power(s: &mut State) -> Result<Expr> {
+    let sign = 1;
+    // todo: check functions here
+    while s.s_type == TOK_INFIX {
+        try!(next_token(s));
+    }
+
+    // todo: new_expr if sign != 1, set function
+    let ret = try!(base(s));
+
+    Ok(ret)
 }
 
-pub fn eval() {
+// todo: ifdef TE_POW_FROM_RIGHT
+fn factor(s: &mut State) -> Result<Expr> {
+    let ret = try!(power(s));
+
+    // todo: check functions here
+    while s.s_type == TOK_INFIX {
+        // todo: fetch and set functions
+        try!(next_token(s));
+    }
+    
+    Ok(ret)
+}
+
+fn term(s: &mut State) -> Result<Expr> {
+    let ret = try!(factor(s));
+
+    // todo: check functions here
+    while s.s_type == TOK_INFIX {
+        // todo: fetch and set functions
+        try!(next_token(s));
+    }
+    
+    Ok(ret)
+}
+
+fn expr(s: &mut State) -> Result<Expr> {
+    let ret = try!(term(s));
+
+    // todo: check functions here
+    while s.s_type == TOK_INFIX {
+        // todo: fetch and set functions
+        try!(next_token(s));
+    }
+    
+    Ok(ret)
+}
+
+fn list(s: &mut State) -> Result<Expr> {
+    let ret = try!(expr(s));
+
+    while s.s_type == TOK_SEP {
+        try!(next_token(s));
+        // todo: new expr
+        // todo: set function
+    }
+    
+    Ok(ret)
+}
+
+fn optimize(n: &mut Expr) {
+    // evaluates as much as possible
+    if n.e_type == TE_CONSTANT { return; }
+    if n.e_type == TE_VARIABLE { return; }
+
+    if (n.e_type & TE_FLAG_PURE).bits() != 0  {
+        let mut known = 1;
+        let arity = arity!(n.e_type);
+        
+        for i in 0..arity {
+            // todo: optimize parameters
+        }
+
+        if known != 0 {
+            n.value = eval(&n);
+            n.e_type = TE_CONSTANT;
+        }
+    }
+}
+
+pub fn compile(expression: &str, variables: Option<Vec<Variable>> ) -> Result<Option<Expr>> {
+    let mut s = State::new(expression);
+    if let Some(vars) = variables {
+        s.lookup = vars;
+    }
+
+    arity!(s.s_type);
+    try!(next_token(&mut s));
+    let mut root = try!(list(&mut s));
+
+    if s.s_type != TOK_END {
+        return Ok(None)
+    }
+
+    optimize(&mut root);
+    Ok(Some(root))
+}
+
+pub fn interp(expression: &str) -> Result<f64> {
+    let e = try!(compile(expression, None));
+
+    if let Some(expr) = e {
+        return Ok(eval(&expr));
+    }
+
+    Err(error::TinyExprError::Other(String::from("NaN")))
+}
+
+pub fn eval(n: &Expr) -> f64 {
+    0.0
 }
