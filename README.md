@@ -8,4 +8,5 @@
 ![](https://img.shields.io/crates/l/json.svg)
 
 Tiny recursive descent expression parser, compiler, and evaluation engine for math expressions.
-This is a WIP port of [Tinyexpr](https://github.com/codeplea/tinyexpr) to Rust.
+
+This is a WIP port of [TinyExpr](https://github.com/codeplea/tinyexpr) to Rust.
