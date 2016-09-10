@@ -37,6 +37,17 @@ bitflags! {
     }
 }
 
+
+// todo: function pointers?
+const FUNCTIONS: [&'static str; 21] = ["abs", "acos", "asin", "atan", "atan2", "ceil", "cos",
+                                       "cosh", "e", "exp", "floor", "ln", "log", "log10",
+                                       "pi", "pow", "sin", "sinh", "sqrt", "tan", "tanh" ];
+const FUNCTION_TYPES: [ExprType; 21] = [ TE_FUNCTION1, TE_FUNCTION1, TE_FUNCTION1, TE_FUNCTION1,
+                                         TE_FUNCTION2, TE_FUNCTION1, TE_FUNCTION1, TE_FUNCTION1,
+                                         TE_FUNCTION0, TE_FUNCTION1, TE_FUNCTION1, TE_FUNCTION1,
+                                         TE_FUNCTION1, TE_FUNCTION1, TE_FUNCTION1, TE_FUNCTION0,
+                                         TE_FUNCTION2, TE_FUNCTION1, TE_FUNCTION1, TE_FUNCTION1,
+                                         TE_FUNCTION1];
 struct Variable {
     pub name: String,
     pub address: i8,
@@ -45,11 +56,11 @@ struct Variable {
 }
 
 impl Variable {
-    fn new() -> Variable {
+    fn new(name: &str, v_type: ExprType) -> Variable {
         Variable {
-            name: String::new(),
+            name: String::from(name),
             address: 0,
-            v_type: TE_VARIABLE,
+            v_type: v_type,
             context: 0,
         }
     }
@@ -92,7 +103,7 @@ impl State {
     }
 }
 
-fn find_lookup(s: &State, txt: &String) -> Option<Variable> {
+fn find_lookup(s: &State, txt: &str) -> Option<Variable> {
     for var in &s.lookup {
         if &(*var.name) == txt {
             return Some((*var).clone());
@@ -102,8 +113,11 @@ fn find_lookup(s: &State, txt: &String) -> Option<Variable> {
     None
 }
 
-fn find_builtin(s: &State, txt: &String) -> Option<Variable> {
-    Some(Variable::new())
+fn find_builtin(txt: &str) -> Option<Variable> {
+    if let Ok(idx) = FUNCTIONS.binary_search(&txt) {
+        return Some(Variable::new(txt, FUNCTION_TYPES[idx]));
+    }
+    None
 }
 
 fn next_token(s: &mut State) -> Result<String> {
@@ -147,7 +161,7 @@ fn next_token(s: &mut State) -> Result<String> {
 
                 let mut var = find_lookup(&s, &txt_str);
                 if let None = var {
-                   var = find_builtin(&s, &txt_str);
+                   var = find_builtin(&txt_str);
                 }
 
                 if let Some(v) = var {
