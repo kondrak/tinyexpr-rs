@@ -2,6 +2,7 @@
 extern crate bitflags;
 pub mod error;
 use error::Result;
+use std::f64::consts;
 use std::str::FromStr;
 
 bitflags! {
@@ -58,26 +59,48 @@ macro_rules! arity {
     ($x:expr) => (if($x & (TE_FUNCTION0 | TE_CLOSURE0)).bits() != 0 { $x.bits() & 0x00000007 } else { 0 })
 }
 
-// todo: function pointers?
+// todo: introduce a Function struct to accomodate different arg numbers and ret values?
 const FUNCTIONS: [&'static str; 21] = ["abs", "acos", "asin", "atan", "atan2", "ceil", "cos",
                                        "cosh", "e", "exp", "floor", "ln", "log", "log10",
                                        "pi", "pow", "sin", "sinh", "sqrt", "tan", "tanh" ];
-const FUNCTION_TYPES: [ExprType; 21] = [ TE_FUNCTION1, TE_FUNCTION1, TE_FUNCTION1, TE_FUNCTION1,
-                                         TE_FUNCTION2, TE_FUNCTION1, TE_FUNCTION1, TE_FUNCTION1,
-                                         TE_FUNCTION0, TE_FUNCTION1, TE_FUNCTION1, TE_FUNCTION1,
-                                         TE_FUNCTION1, TE_FUNCTION1, TE_FUNCTION1, TE_FUNCTION0,
-                                         TE_FUNCTION2, TE_FUNCTION1, TE_FUNCTION1, TE_FUNCTION1,
-                                         TE_FUNCTION1];
+const FUNCTION_TYPES: [(fn(f64, f64) -> f64, ExprType); 21] = [ (abs, TE_FUNCTION1), (acos, TE_FUNCTION1), (asin, TE_FUNCTION1),
+                                                                 (atan, TE_FUNCTION1), (atan2, TE_FUNCTION2), (ceil, TE_FUNCTION1),
+                                                                 (cos, TE_FUNCTION1), (cosh, TE_FUNCTION1), (e, TE_FUNCTION0),
+                                                                 (exp, TE_FUNCTION1), (floor, TE_FUNCTION1), (ln, TE_FUNCTION1),
+                                                                 (log, TE_FUNCTION1), (log10, TE_FUNCTION1), (pi, TE_FUNCTION0),
+                                                                 (pow, TE_FUNCTION2), (sin, TE_FUNCTION1), (sinh, TE_FUNCTION1),
+                                                                 (sqrt, TE_FUNCTION1), (tan, TE_FUNCTION1), (tanh, TE_FUNCTION1)];
 
 fn dummy(_: f64, _: f64) -> f64 { panic!("called dummy!") } // todo
 fn add(a: f64, b: f64) -> f64 { a + b }
 fn sub(a: f64, b: f64) -> f64 { a - b }
 fn mul(a: f64, b: f64) -> f64 { a * b }
 fn div(a: f64, b: f64) -> f64 { a / b }
-fn pow(a: f64, b: f64) -> f64 { a.powf(b) }
-fn fmod(a: f64, b: f64) -> f64 { a*b } // todo
+fn fmod(a: f64, b: f64) -> f64 { a % b }
 fn neg(a: f64, _: f64) -> f64 { -a }
 fn comma(_: f64, b: f64) -> f64 { b }
+// todo: this is added so that it works with current fptr... - need more types! no extra unused params!
+fn abs(a: f64, _: f64) -> f64 { a.abs() }
+fn acos(a: f64, _: f64) -> f64 { a.acos() }
+fn asin(a: f64, _: f64) -> f64 { a.asin() }
+fn atan(a: f64, _: f64) -> f64 { a.atan() }
+fn atan2(a: f64, b: f64) -> f64 { a.atan2(b) }
+fn ceil(a: f64, _: f64) -> f64 { a.ceil() }
+fn cos(a: f64, _: f64) -> f64 { a.cos() }
+fn cosh(a: f64, _: f64) -> f64 { a.cosh() }
+fn e(_: f64, _: f64) -> f64 { consts::E }
+fn exp(a: f64, _: f64) -> f64 { a.exp() }
+fn floor(a: f64, _: f64) -> f64 { a.floor() }
+fn ln(a: f64, _: f64) -> f64 { a.ln() }
+fn log(a: f64, _: f64) -> f64 { a.log10() } // todo ?
+fn log10(a: f64, _: f64) -> f64 { a.log10() }
+fn pi(_: f64, _: f64) -> f64 { consts::PI }
+fn pow(a: f64, b: f64) -> f64 { a.powf(b) }
+fn sin(a: f64, _: f64) -> f64 { a.sin() }
+fn sinh(a: f64, _: f64) -> f64 { a.sinh() }
+fn sqrt(a: f64, _: f64) -> f64 { a.sqrt() }
+fn tan(a: f64, _: f64) -> f64 { a.tan() }
+fn tanh(a: f64, _: f64) -> f64 { a.tanh() }
 
 #[derive(Debug)]
 pub struct Expr {
@@ -116,7 +139,8 @@ impl Clone for Expr {
 #[derive(Debug)]
 pub struct Variable {
     pub name: String,
-    pub address: i8,
+    pub address: i8, // todo: this will have to go - handle variables? (no void*)
+    pub function: fn(f64, f64) -> f64,
     pub v_type: ExprType,
     pub context: Vec<Expr>,
 }
@@ -126,6 +150,7 @@ impl Variable {
         Variable {
             name: String::from(name),
             address: 0,
+            function: dummy,
             v_type: v_type,
             context: Vec::<Expr>::new(),
         }
@@ -137,6 +162,7 @@ impl Clone for Variable {
         Variable {
             name: self.name.clone(),
             address: self.address,
+            function: self.function,
             v_type: self.v_type,
             context: self.context.clone()
         }
@@ -196,7 +222,9 @@ fn find_lookup(s: &State, txt: &str) -> Option<Variable> {
 
 fn find_builtin(txt: &str) -> Option<Variable> {
     if let Ok(idx) = FUNCTIONS.binary_search(&txt) {
-        return Some(Variable::new(txt, FUNCTION_TYPES[idx]));
+        let mut v = Variable::new(txt, FUNCTION_TYPES[idx].1 | TE_FLAG_PURE);
+        v.function = FUNCTION_TYPES[idx].0;
+        return Some(v);
     }
     None
 }
@@ -246,7 +274,7 @@ fn next_token(s: &mut State) -> Result<String> {
                 }
 
                 if let Some(v) = var {
-                    match type_mask!(s.s_type) {
+                    match type_mask!(v.v_type) {
                         TE_VARIABLE => { s.s_type = TOK_VARIABLE; s.bound = v.address; },
                         TE_CLOSURE0 => s.context = v.context,
                         TE_CLOSURE1 => s.context = v.context,
@@ -256,14 +284,14 @@ fn next_token(s: &mut State) -> Result<String> {
                         TE_CLOSURE5 => s.context = v.context,
                         TE_CLOSURE6 => s.context = v.context,
                         TE_CLOSURE7 => s.context = v.context,
-                        /*TE_FUNCTION0 => { s.s_type = v.v_type; s.function = v.address; },
-                        TE_FUNCTION1 => { s.s_type = v.v_type; s.function = v.address; },
-                        TE_FUNCTION2 => { s.s_type = v.v_type; s.function = v.address; },
-                        TE_FUNCTION3 => { s.s_type = v.v_type; s.function = v.address; },
-                        TE_FUNCTION4 => { s.s_type = v.v_type; s.function = v.address; },
-                        TE_FUNCTION5 => { s.s_type = v.v_type; s.function = v.address; },
-                        TE_FUNCTION6 => { s.s_type = v.v_type; s.function = v.address; },
-                        TE_FUNCTION7 => { s.s_type = v.v_type; s.function = v.address; },*/
+                        TE_FUNCTION0 => { s.s_type = v.v_type; s.function = v.function; },
+                        TE_FUNCTION1 => { s.s_type = v.v_type; s.function = v.function; },
+                        TE_FUNCTION2 => { s.s_type = v.v_type; s.function = v.function; },
+                        TE_FUNCTION3 => { s.s_type = v.v_type; s.function = v.function; },
+                        TE_FUNCTION4 => { s.s_type = v.v_type; s.function = v.function; },
+                        TE_FUNCTION5 => { s.s_type = v.v_type; s.function = v.function; },
+                        TE_FUNCTION6 => { s.s_type = v.v_type; s.function = v.function; },
+                        TE_FUNCTION7 => { s.s_type = v.v_type; s.function = v.function; },
                         _ => {}
                     }
                 }
@@ -322,6 +350,7 @@ fn base(s: &mut State) -> Result<Expr> {
             ret.function = s.function;
             // todo: set parameters
             try!(next_token(s));
+            ret.parameters.push(try!(power(s)));
             // todo: set parameters
         },
         TE_FUNCTION2 | TE_CLOSURE2 | TE_FUNCTION3 |
@@ -503,6 +532,8 @@ pub fn eval(n: &Expr) -> f64 {
         TE_FUNCTION0 | TE_FUNCTION1 | TE_FUNCTION2 | TE_FUNCTION3 |
         TE_FUNCTION4 | TE_FUNCTION5 | TE_FUNCTION6 | TE_FUNCTION7 => {
             match arity!(n.e_type) {
+                // todo: really need more function pointer types to avoid hacks like this 0.0 here...
+                1 => ((*n).function)(eval(&n.parameters[0]), 0.0),
                 2 => ((*n).function)(eval(&n.parameters[0]), eval(&n.parameters[1])),
                 _ => panic!("todo: different f. pointers")
             }
