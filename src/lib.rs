@@ -68,12 +68,24 @@ const FUNCTION_TYPES: [ExprType; 21] = [ TE_FUNCTION1, TE_FUNCTION1, TE_FUNCTION
                                          TE_FUNCTION1, TE_FUNCTION1, TE_FUNCTION1, TE_FUNCTION0,
                                          TE_FUNCTION2, TE_FUNCTION1, TE_FUNCTION1, TE_FUNCTION1,
                                          TE_FUNCTION1];
+
+fn dummy(_: f64, _: f64) -> f64 { panic!("called dummy!") } // todo
+fn add(a: f64, b: f64) -> f64 { a + b }
+fn sub(a: f64, b: f64) -> f64 { a - b }
+fn mul(a: f64, b: f64) -> f64 { a * b }
+fn div(a: f64, b: f64) -> f64 { a / b }
+fn pow(a: f64, b: f64) -> f64 { a.powf(b) }
+fn fmod(a: f64, b: f64) -> f64 { a*b } // todo
+fn neg(a: f64, _: f64) -> f64 { -a }
+fn comma(_: f64, b: f64) -> f64 { b }
+
+#[derive(Debug)]
 pub struct Expr {
     pub e_type: ExprType,
     pub value: f64,
     pub bound: i8,
-    pub function: i8,
-    pub parameters: i8
+    pub function: fn(f64, f64) -> f64,
+    pub parameters: Vec<Expr>
 }
 
 impl Expr {
@@ -82,17 +94,31 @@ impl Expr {
             e_type: TOK_NULL,
             value: 0.0,
             bound: 0,
-            function: 0,
-            parameters: 0,
+            function: dummy,
+            parameters: Vec::<Expr>::new()
         }
     }
 }
 
+impl Clone for Expr {
+    fn clone(&self) -> Expr {
+        Expr {
+            e_type: self.e_type,
+            value: self.value,
+            bound: self.bound,
+            function: self.function,
+            parameters: self.parameters.clone()
+        }
+    }
+}
+
+
+#[derive(Debug)]
 pub struct Variable {
     pub name: String,
     pub address: i8,
     pub v_type: ExprType,
-    pub context: i8,
+    pub context: Vec<Expr>,
 }
 
 impl Variable {
@@ -101,7 +127,7 @@ impl Variable {
             name: String::from(name),
             address: 0,
             v_type: v_type,
-            context: 0,
+            context: Vec::<Expr>::new(),
         }
     }
 }
@@ -112,19 +138,20 @@ impl Clone for Variable {
             name: self.name.clone(),
             address: self.address,
             v_type: self.v_type,
-            context: self.context
+            context: self.context.clone()
         }
     }
 }
 
+#[derive(Debug)]
 struct State {
     pub next: String,
     pub s_type: ExprType,
     pub n_idx: usize,
     pub value: f64,
     pub bound: i8,
-    pub function: i8,
-    pub context: i8,
+    pub function: fn(f64, f64) -> f64,
+    pub context: Vec<Expr>,
     pub lookup: Vec<Variable>,
 }
 
@@ -136,19 +163,25 @@ impl State {
             n_idx: 0,
             value: 0.0,
             bound: 0,
-            function: 0,
-            context: 0,
+            function: mul,
+            context: Vec::<Expr>::new(),
             lookup: Vec::<Variable>::new()
         }
     }
 }
 
 // todo
-fn new_expr(e_type: ExprType) -> Expr {
+fn new_expr(e_type: ExprType, params: Option<Vec<Expr>>) -> Expr {
     let arity = arity!(e_type);
-
+    let mut ret = Expr::new();
     // just create a new expression with new type based on old expression, no weird memcpy mumbo jumbo
-    Expr::new()
+    ret.e_type = e_type;
+    ret.bound = 0;
+    if let Some(params) = params {
+        ret.parameters = params;
+    }
+
+    ret
 }
 
 fn find_lookup(s: &State, txt: &str) -> Option<Variable> {
@@ -223,14 +256,14 @@ fn next_token(s: &mut State) -> Result<String> {
                         TE_CLOSURE5 => s.context = v.context,
                         TE_CLOSURE6 => s.context = v.context,
                         TE_CLOSURE7 => s.context = v.context,
-                        TE_FUNCTION0 => { s.s_type = v.v_type; s.function = v.address; },
+                        /*TE_FUNCTION0 => { s.s_type = v.v_type; s.function = v.address; },
                         TE_FUNCTION1 => { s.s_type = v.v_type; s.function = v.address; },
                         TE_FUNCTION2 => { s.s_type = v.v_type; s.function = v.address; },
                         TE_FUNCTION3 => { s.s_type = v.v_type; s.function = v.address; },
                         TE_FUNCTION4 => { s.s_type = v.v_type; s.function = v.address; },
                         TE_FUNCTION5 => { s.s_type = v.v_type; s.function = v.address; },
                         TE_FUNCTION6 => { s.s_type = v.v_type; s.function = v.address; },
-                        TE_FUNCTION7 => { s.s_type = v.v_type; s.function = v.address; },
+                        TE_FUNCTION7 => { s.s_type = v.v_type; s.function = v.address; },*/
                         _ => {}
                     }
                 }
@@ -238,18 +271,17 @@ fn next_token(s: &mut State) -> Result<String> {
                     s.s_type = TOK_ERROR;
                 }
             } else {
-                // todo: set function
                 // look for an operator or special character
                 match s.next.as_bytes()[s.n_idx] as char {
-                    '+' => s.s_type = TOK_INFIX,
-                    '-' => s.s_type = TOK_INFIX,
-                    '*' => s.s_type = TOK_INFIX,
-                    '/' => s.s_type = TOK_INFIX,
-                    '^' => s.s_type = TOK_INFIX,
-                    '%' => s.s_type = TOK_INFIX,
-                    '(' => s.s_type = TOK_OPEN,
-                    ')' => s.s_type = TOK_CLOSE,
-                    ',' => s.s_type = TOK_SEP,
+                    '+' => { s.s_type = TOK_INFIX; s.function = add; },
+                    '-' => { s.s_type = TOK_INFIX; s.function = sub; },
+                    '*' => { s.s_type = TOK_INFIX; s.function = mul; },
+                    '/' => { s.s_type = TOK_INFIX; s.function = div; },
+                    '^' => { s.s_type = TOK_INFIX; s.function = pow; },
+                    '%' => { s.s_type = TOK_INFIX; s.function = fmod; },
+                    '(' =>  s.s_type = TOK_OPEN,
+                    ')' =>  s.s_type = TOK_CLOSE,
+                    ',' =>  s.s_type = TOK_SEP,
                     ' ' | '\t' | '\n' |'\r' => {},
                       _ => s.s_type = TOK_ERROR
                 }
@@ -266,24 +298,27 @@ fn base(s: &mut State) -> Result<Expr> {
 
     match type_mask!(s.s_type) {
         TOK_NUMBER => {
-            ret = new_expr(TE_CONSTANT);
+            ret = new_expr(TE_CONSTANT, None);
             ret.value = s.value;
             try!(next_token(s));
         },
         TOK_VARIABLE => {
-            ret = new_expr(TE_VARIABLE);
+            ret = new_expr(TE_VARIABLE, None);
             ret.bound = s.bound;
             try!(next_token(s));
         },
         TE_FUNCTION0 | TE_CLOSURE0 => {
-            ret = new_expr(s.s_type);
+            ret = new_expr(s.s_type, None);
             ret.function = s.function;
             // todo: set parameters
+            /*if is_closure!(s.s_type) {
+                ret.parameters[0] = s.context[0].clone();
+            }*/
             try!(next_token(s));
             // todo: set parameters
         },
         TE_FUNCTION1 | TE_CLOSURE1 => {
-            ret = new_expr(s.s_type);
+            ret = new_expr(s.s_type, None);
             ret.function = s.function;
             // todo: set parameters
             try!(next_token(s));
@@ -295,7 +330,7 @@ fn base(s: &mut State) -> Result<Expr> {
         TE_CLOSURE6 | TE_FUNCTION7 | TE_CLOSURE7 => {
             let arity = arity!(s.s_type);
 
-            ret = new_expr(s.s_type);
+            ret = new_expr(s.s_type, None);
             ret.function = s.function;
             // todo: set parameters
             try!(next_token(s));
@@ -330,72 +365,83 @@ fn base(s: &mut State) -> Result<Expr> {
         }
         _ => {
             // todo: better error? Use NaN?
-            ret = new_expr(TE_VARIABLE);
+            ret = new_expr(TE_VARIABLE, None);
             s.s_type = TOK_ERROR;
             ret.value = 0.0;
         }
     }
-    
+
     Ok(ret)
 }
 
 fn power(s: &mut State) -> Result<Expr> {
-    let sign = 1;
-    // todo: check functions here
-    while s.s_type == TOK_INFIX {
+    let mut sign = 1;
+
+    while s.s_type == TOK_INFIX && (s.function == add || s.function == sub) {
+        if s.function == sub { sign = -sign; }
         try!(next_token(s));
     }
 
-    // todo: new_expr if sign != 1, set function
-    let ret = try!(base(s));
+    let mut ret: Expr;
+
+    if sign == 1 {
+        ret = try!(base(s));
+    } else {
+        ret = new_expr(TE_FUNCTION1 | TE_FLAG_PURE, Some(vec![try!(base(s)).clone()]));
+        ret.function = neg;
+    }
 
     Ok(ret)
 }
 
 // todo: ifdef TE_POW_FROM_RIGHT
 fn factor(s: &mut State) -> Result<Expr> {
-    let ret = try!(power(s));
+    let mut ret = try!(power(s));
 
     // todo: check functions here
-    while s.s_type == TOK_INFIX {
-        // todo: fetch and set functions
+    while s.s_type == TOK_INFIX && s.function == pow {
+        let f = s.function;
         try!(next_token(s));
+        ret = new_expr(TE_FUNCTION2 | TE_FLAG_PURE, Some(vec![ret.clone(), try!(power(s)).clone()]));
+        ret.function = f;
     }
     
     Ok(ret)
 }
 
 fn term(s: &mut State) -> Result<Expr> {
-    let ret = try!(factor(s));
+    let mut ret = try!(factor(s));
 
-    // todo: check functions here
-    while s.s_type == TOK_INFIX {
-        // todo: fetch and set functions
+    while s.s_type == TOK_INFIX && (s.function == mul || s.function == div || s.function == fmod) {
+        let f = s.function;
         try!(next_token(s));
+        ret = new_expr(TE_FUNCTION2 | TE_FLAG_PURE, Some(vec![ret.clone(), try!(factor(s)).clone()]));
+        ret.function = f;
     }
     
     Ok(ret)
 }
 
 fn expr(s: &mut State) -> Result<Expr> {
-    let ret = try!(term(s));
+    let mut ret = try!(term(s));
 
-    // todo: check functions here
-    while s.s_type == TOK_INFIX {
-        // todo: fetch and set functions
+    while s.s_type == TOK_INFIX && (s.function == add || s.function == sub) {
+        let f = s.function;
         try!(next_token(s));
+        ret = new_expr(TE_FUNCTION2 | TE_FLAG_PURE, Some(vec![ret.clone(), try!(term(s)).clone()]));
+        ret.function = f;
     }
     
     Ok(ret)
 }
 
 fn list(s: &mut State) -> Result<Expr> {
-    let ret = try!(expr(s));
+    let mut ret = try!(expr(s));
 
     while s.s_type == TOK_SEP {
         try!(next_token(s));
-        // todo: new expr
-        // todo: set function
+        ret = new_expr(TE_FUNCTION2 | TE_FLAG_PURE, Some(vec![ret.clone(), try!(expr(s)).clone()]));
+        ret.function = comma;
     }
     
     Ok(ret)
@@ -451,5 +497,16 @@ pub fn interp(expression: &str) -> Result<f64> {
 
 // todo
 pub fn eval(n: &Expr) -> f64 {
-    0.0
+    match type_mask!(n.e_type) {
+        TE_CONSTANT => n.value,
+        TE_VARIABLE => n.bound as f64,
+        TE_FUNCTION0 | TE_FUNCTION1 | TE_FUNCTION2 | TE_FUNCTION3 |
+        TE_FUNCTION4 | TE_FUNCTION5 | TE_FUNCTION6 | TE_FUNCTION7 => {
+            match arity!(n.e_type) {
+                2 => ((*n).function)(eval(&n.parameters[0]), eval(&n.parameters[1])),
+                _ => panic!("todo: different f. pointers")
+            }
+        }
+        _ => 0.0
+    }
 }

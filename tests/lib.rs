@@ -2,7 +2,5 @@ extern crate tinyexpr;
 
 #[test]
 fn foo() {
-    tinyexpr::interp("2*2");
-    tinyexpr::compile();
-    tinyexpr::eval();
+    assert_eq!(tinyexpr::interp("2*2").unwrap(), 4.0);
 }
