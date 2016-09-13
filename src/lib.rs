@@ -106,9 +106,9 @@ fn tanh(a: f64, _: f64) -> f64 { a.tanh() }
 pub struct Expr {
     pub e_type: ExprType,
     pub value: f64,
-    pub bound: i8,
+    pub bound: i8, // todo: Variable?
     pub function: fn(f64, f64) -> f64,
-    pub parameters: Vec<Expr>
+    pub parameters: Vec<Expr> // todo: should this be Option<>? Also, Expr&?
 }
 
 impl Expr {
@@ -521,7 +521,7 @@ pub fn interp(expression: &str) -> Result<f64> {
         return Ok(eval(&expr));
     }
 
-    Err(error::TinyExprError::Other(String::from("NaN")))
+    Err(error::TinyExprError::Other(String::from("NaN"))) // todo: different error type?
 }
 
 // todo
