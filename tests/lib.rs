@@ -4,6 +4,7 @@ extern crate tinyexpr;
 fn check_basics() {
     assert_eq!(tinyexpr::interp("2*2").unwrap(), 4.0);
     assert_eq!(tinyexpr::interp("2+2").unwrap(), 4.0);
+    assert_eq!(tinyexpr::interp("3-2").unwrap(), 1.0);
     assert_eq!(tinyexpr::interp("5%2").unwrap(), 1.0);
     assert_eq!(tinyexpr::interp("2+2*2").unwrap(), 6.0);
     assert_eq!(tinyexpr::interp("(2+2)*2").unwrap(), 8.0);
