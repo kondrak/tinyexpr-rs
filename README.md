@@ -41,7 +41,7 @@ Build instructions
 
 ```
 cargo build
-cargo run --example example
+cargo run --example tinyexpr
 ```
 
 ## Todo
