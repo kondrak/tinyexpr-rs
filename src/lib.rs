@@ -550,13 +550,11 @@ fn compile(expression: &str, variables: Option<Vec<Variable>> ) -> Result<Option
 /// let result = tinyexpr::interp("2+2").unwrap();
 /// ```
 pub fn interp(expression: &str) -> Result<f64> {
-    let e = try!(compile(expression, None));
-
-    if let Some(expr) = e {
-        return Ok(eval(&expr));
+    match compile(expression, None) {
+        Ok(Some(expr)) => Ok(eval(&expr)),
+        Err(e)         => Err(e),
+        _              => Err(error::TinyExprError::Other(String::from("NaN")))
     }
-
-    Err(error::TinyExprError::Other(String::from("NaN"))) // todo: different error type?
 }
 
 // todo
