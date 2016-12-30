@@ -18,7 +18,7 @@ Usage
 ```toml
 # Cargo.toml
 [dependencies]
-tinyexpr = "0.0.1"
+tinyexpr = "0.1"
 ```
 
 Example
