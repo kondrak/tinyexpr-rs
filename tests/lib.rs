@@ -54,4 +54,4 @@ fn check_hyberbolic_trigs() {
 #[test]
 #[should_panic]
 fn parse_error()
-{ tinyexpr::interp("atan(foo)").unwrap(); }
+{ let _ = tinyexpr::interp("atan(foo)").unwrap_or_else(|e| { panic!("{}", e); }); }

@@ -47,6 +47,7 @@ cargo run --example example
 ## Todo
 - support for custom user function
 - support for functions taking more than 2 parameters
+- support closures
 
 ## License
 
