@@ -30,8 +30,8 @@ use std::str::FromStr;
 bitflags! {
     #[doc(hidden)]
     pub flags ExprType: u64 {
-        const TE_VARIABLE = 0,
-        const TE_CONSTANT = 1,
+        const TE_VARIABLE  = 0,
+        const TE_CONSTANT  = 1,
         const TE_FUNCTION0 = 8,
         const TE_FUNCTION1 = 9,
         const TE_FUNCTION2 = 10,
@@ -40,25 +40,25 @@ bitflags! {
         const TE_FUNCTION5 = 13,
         const TE_FUNCTION6 = 14,
         const TE_FUNCTION7 = 15,
-        const TE_CLOSURE0 = 16,
-        const TE_CLOSURE1 = 17,
-        const TE_CLOSURE2 = 18,
-        const TE_CLOSURE3 = 19,
-        const TE_CLOSURE4 = 20,
-        const TE_CLOSURE5 = 21,
-        const TE_CLOSURE6 = 22,
-        const TE_CLOSURE7 = 23,
+        const TE_CLOSURE0  = 16,
+        const TE_CLOSURE1  = 17,
+        const TE_CLOSURE2  = 18,
+        const TE_CLOSURE3  = 19,
+        const TE_CLOSURE4  = 20,
+        const TE_CLOSURE5  = 21,
+        const TE_CLOSURE6  = 22,
+        const TE_CLOSURE7  = 23,
         const TE_FLAG_PURE = 32,
-        const TOK_NULL = 24,
-        const TOK_ERROR = 25,
-        const TOK_END = 26,
-        const TOK_SEP = 27,
-        const TOK_OPEN = 28,
-        const TOK_CLOSE = 29,
-        const TOK_NUMBER = 30,
+        const TOK_NULL     = 24,
+        const TOK_ERROR    = 25,
+        const TOK_END      = 26,
+        const TOK_SEP      = 27,
+        const TOK_OPEN     = 28,
+        const TOK_CLOSE    = 29,
+        const TOK_NUMBER   = 30,
         const TOK_VARIABLE = 31,
-        const TOK_INFIX = 32,
-        const T_MASK =  0x0000001F
+        const TOK_INFIX    = 32,
+        const T_MASK       =  0x0000001F
     }
 }
 
@@ -86,52 +86,52 @@ macro_rules! arity {
 const FUNCTIONS: [&'static str; 21] = ["abs", "acos", "asin", "atan", "atan2", "ceil", "cos",
                                        "cosh", "e", "exp", "floor", "ln", "log", "log10",
                                        "pi", "pow", "sin", "sinh", "sqrt", "tan", "tanh" ];
-const FUNCTION_TYPES: [(fn(f64, f64) -> f64, ExprType); 21] = [ (abs, TE_FUNCTION1), (acos, TE_FUNCTION1), (asin, TE_FUNCTION1),
-                                                                 (atan, TE_FUNCTION1), (atan2, TE_FUNCTION2), (ceil, TE_FUNCTION1),
-                                                                 (cos, TE_FUNCTION1), (cosh, TE_FUNCTION1), (e, TE_FUNCTION0),
-                                                                 (exp, TE_FUNCTION1), (floor, TE_FUNCTION1), (ln, TE_FUNCTION1),
-                                                                 (log, TE_FUNCTION1), (log10, TE_FUNCTION1), (pi, TE_FUNCTION0),
-                                                                 (pow, TE_FUNCTION2), (sin, TE_FUNCTION1), (sinh, TE_FUNCTION1),
-                                                                 (sqrt, TE_FUNCTION1), (tan, TE_FUNCTION1), (tanh, TE_FUNCTION1)];
+const FUNCTION_TYPES: [(fn(f64, f64) -> f64, ExprType); 21] = [ (abs,  TE_FUNCTION1), (acos,  TE_FUNCTION1), (asin, TE_FUNCTION1),
+                                                                (atan, TE_FUNCTION1), (atan2, TE_FUNCTION2), (ceil, TE_FUNCTION1),
+                                                                (cos,  TE_FUNCTION1), (cosh,  TE_FUNCTION1), (e,    TE_FUNCTION0),
+                                                                (exp,  TE_FUNCTION1), (floor, TE_FUNCTION1), (ln,   TE_FUNCTION1),
+                                                                (log,  TE_FUNCTION1), (log10, TE_FUNCTION1), (pi,   TE_FUNCTION0),
+                                                                (pow,  TE_FUNCTION2), (sin,   TE_FUNCTION1), (sinh, TE_FUNCTION1),
+                                                                (sqrt, TE_FUNCTION1), (tan,   TE_FUNCTION1), (tanh, TE_FUNCTION1)];
 
 fn dummy(_: f64, _: f64) -> f64 { panic!("called dummy!") } // todo
-fn add(a: f64, b: f64) -> f64 { a + b }
-fn sub(a: f64, b: f64) -> f64 { a - b }
-fn mul(a: f64, b: f64) -> f64 { a * b }
-fn div(a: f64, b: f64) -> f64 { a / b }
-fn fmod(a: f64, b: f64) -> f64 { a % b }
-fn neg(a: f64, _: f64) -> f64 { -a }
-fn comma(_: f64, b: f64) -> f64 { b }
+fn   add(a: f64, b: f64) -> f64 { a + b }
+fn   sub(a: f64, b: f64) -> f64 { a - b }
+fn   mul(a: f64, b: f64) -> f64 { a * b }
+fn   div(a: f64, b: f64) -> f64 { a / b }
+fn  fmod(a: f64, b: f64) -> f64 { a % b }
+fn   neg(a: f64, _: f64) -> f64 { -a }
+fn comma(_: f64, b: f64) -> f64 {  b }
 // todo: this is added so that it works with current fptr... - need more types! no extra unused params!
-fn abs(a: f64, _: f64) -> f64 { a.abs() }
-fn acos(a: f64, _: f64) -> f64 { a.acos() }
-fn asin(a: f64, _: f64) -> f64 { a.asin() }
-fn atan(a: f64, _: f64) -> f64 { a.atan() }
+fn   abs(a: f64, _: f64) -> f64 { a.abs()    }
+fn  acos(a: f64, _: f64) -> f64 { a.acos()   }
+fn  asin(a: f64, _: f64) -> f64 { a.asin()   }
+fn  atan(a: f64, _: f64) -> f64 { a.atan()   }
 fn atan2(a: f64, b: f64) -> f64 { a.atan2(b) }
-fn ceil(a: f64, _: f64) -> f64 { a.ceil() }
-fn cos(a: f64, _: f64) -> f64 { a.cos() }
-fn cosh(a: f64, _: f64) -> f64 { a.cosh() }
-fn e(_: f64, _: f64) -> f64 { consts::E }
-fn exp(a: f64, _: f64) -> f64 { a.exp() }
-fn floor(a: f64, _: f64) -> f64 { a.floor() }
-fn ln(a: f64, _: f64) -> f64 { a.ln() }
-fn log(a: f64, _: f64) -> f64 { a.log10() } // todo ?
-fn log10(a: f64, _: f64) -> f64 { a.log10() }
-fn pi(_: f64, _: f64) -> f64 { consts::PI }
-fn pow(a: f64, b: f64) -> f64 { a.powf(b) }
-fn sin(a: f64, _: f64) -> f64 { a.sin() }
-fn sinh(a: f64, _: f64) -> f64 { a.sinh() }
-fn sqrt(a: f64, _: f64) -> f64 { a.sqrt() }
-fn tan(a: f64, _: f64) -> f64 { a.tan() }
-fn tanh(a: f64, _: f64) -> f64 { a.tanh() }
+fn  ceil(a: f64, _: f64) -> f64 { a.ceil()   }
+fn   cos(a: f64, _: f64) -> f64 { a.cos()    }
+fn  cosh(a: f64, _: f64) -> f64 { a.cosh()   }
+fn     e(_: f64, _: f64) -> f64 { consts::E  }
+fn   exp(a: f64, _: f64) -> f64 { a.exp()    }
+fn floor(a: f64, _: f64) -> f64 { a.floor()  }
+fn    ln(a: f64, _: f64) -> f64 { a.ln()     }
+fn   log(a: f64, _: f64) -> f64 { a.log10()  } // todo ?
+fn log10(a: f64, _: f64) -> f64 { a.log10()  }
+fn    pi(_: f64, _: f64) -> f64 { consts::PI }
+fn   pow(a: f64, b: f64) -> f64 { a.powf(b)  }
+fn   sin(a: f64, _: f64) -> f64 { a.sin()    }
+fn  sinh(a: f64, _: f64) -> f64 { a.sinh()   }
+fn  sqrt(a: f64, _: f64) -> f64 { a.sqrt()   }
+fn   tan(a: f64, _: f64) -> f64 { a.tan()    }
+fn  tanh(a: f64, _: f64) -> f64 { a.tanh()   }
 
 #[doc(hidden)]
 #[derive(Debug)]
 pub struct Expr {
     pub e_type: ExprType,
-    pub value: f64,
-    pub bound: i8, // todo: Variable?
-    pub function: fn(f64, f64) -> f64,
+    pub value:  f64,
+    pub bound:  i8, // todo: Variable?
+    pub function:   fn(f64, f64) -> f64,
     pub parameters: Vec<Expr> // todo: should this be Option<>? Also, Expr&?
 }
 
@@ -139,9 +139,9 @@ impl Expr {
     fn new() -> Expr {
         Expr {
             e_type: TOK_NULL,
-            value: 0.0,
-            bound: 0,
-            function: dummy,
+            value:  0.0,
+            bound:  0,
+            function:   dummy,
             parameters: Vec::<Expr>::new()
         }
     }
@@ -151,9 +151,9 @@ impl Clone for Expr {
     fn clone(&self) -> Expr {
         Expr {
             e_type: self.e_type,
-            value: self.value,
-            bound: self.bound,
-            function: self.function,
+            value:  self.value,
+            bound:  self.bound,
+            function:   self.function,
             parameters: self.parameters.clone()
         }
     }
@@ -163,21 +163,21 @@ impl Clone for Expr {
 #[doc(hidden)]
 #[derive(Debug)]
 pub struct Variable {
-    pub name: String,
-    pub address: i8, // todo: this will have to go - handle variables? (no void*)
+    pub name:     String,
+    pub address:  i8, // todo: this will have to go - handle variables? (no void*)
     pub function: fn(f64, f64) -> f64,
-    pub v_type: ExprType,
-    pub context: Vec<Expr>,
+    pub v_type:   ExprType,
+    pub context:  Vec<Expr>,
 }
 
 impl Variable {
     fn new(name: &str, v_type: ExprType) -> Variable {
         Variable {
-            name: String::from(name),
-            address: 0,
+            name:     String::from(name),
+            address:  0,
             function: dummy,
-            v_type: v_type,
-            context: Vec::<Expr>::new(),
+            v_type:   v_type,
+            context:  Vec::<Expr>::new(),
         }
     }
 }
@@ -185,38 +185,38 @@ impl Variable {
 impl Clone for Variable {
     fn clone(&self) -> Variable {
         Variable {
-            name: self.name.clone(),
-            address: self.address,
+            name:     self.name.clone(),
+            address:  self.address,
             function: self.function,
-            v_type: self.v_type,
-            context: self.context.clone()
+            v_type:   self.v_type,
+            context:  self.context.clone()
         }
     }
 }
 
 #[derive(Debug)]
 struct State {
-    pub next: String,
+    pub next:   String,
     pub s_type: ExprType,
-    pub n_idx: usize,
-    pub value: f64,
-    pub bound: i8,
+    pub n_idx:  usize,
+    pub value:  f64,
+    pub bound:  i8,
     pub function: fn(f64, f64) -> f64,
-    pub context: Vec<Expr>,
-    pub lookup: Vec<Variable>,
+    pub context:  Vec<Expr>,
+    pub lookup:   Vec<Variable>,
 }
 
 impl State {
     fn new(expression: &str) -> State {
         State {
-            next: String::from(expression),
+            next:   String::from(expression),
             s_type: TOK_NULL,
-            n_idx: 0,
-            value: 0.0,
-            bound: 0,
+            n_idx:  0,
+            value:  0.0,
+            bound:  0,
             function: mul,
-            context: Vec::<Expr>::new(),
-            lookup: Vec::<Variable>::new()
+            context:  Vec::<Expr>::new(),
+            lookup:   Vec::<Variable>::new()
         }
     }
 }
@@ -251,6 +251,7 @@ fn find_builtin(txt: &str) -> Option<Variable> {
         v.function = FUNCTION_TYPES[idx].0;
         return Some(v);
     }
+
     None
 }
 
@@ -378,10 +379,10 @@ fn base(s: &mut State) -> Result<Expr> {
             ret.parameters.push(try!(power(s)));
             // todo: set parameters
         },
-        TE_FUNCTION2 | TE_CLOSURE2 | TE_FUNCTION3 |
-        TE_CLOSURE3 | TE_FUNCTION4 | TE_CLOSURE4 |
-        TE_FUNCTION5 | TE_CLOSURE5 | TE_FUNCTION6 |
-        TE_CLOSURE6 | TE_FUNCTION7 | TE_CLOSURE7 => {
+        TE_FUNCTION2 | TE_CLOSURE2  | TE_FUNCTION3 |
+        TE_CLOSURE3  | TE_FUNCTION4 | TE_CLOSURE4  |
+        TE_FUNCTION5 | TE_CLOSURE5  | TE_FUNCTION6 |
+        TE_CLOSURE6  | TE_FUNCTION7 | TE_CLOSURE7 => {
             let arity = arity!(s.s_type);
 
             ret = new_expr(s.s_type, None);
