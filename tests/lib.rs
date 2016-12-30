@@ -6,6 +6,7 @@ fn check_basics() {
     assert_eq!(tinyexpr::interp("2+2").unwrap(), 4.0);
     assert_eq!(tinyexpr::interp("3-2").unwrap(), 1.0);
     assert_eq!(tinyexpr::interp("5%2").unwrap(), 1.0);
+    assert_eq!(tinyexpr::interp("5^2").unwrap(), 25.0);
     assert_eq!(tinyexpr::interp("2+2*2").unwrap(), 6.0);
     assert_eq!(tinyexpr::interp("(2+2)*2").unwrap(), 8.0);
     assert_eq!(tinyexpr::interp("(2+2)*2/2").unwrap(), 4.0);
@@ -15,6 +16,7 @@ fn check_basics() {
     assert_eq!(tinyexpr::interp("exp(1)").unwrap(), tinyexpr::interp("e").unwrap());
     assert_eq!(tinyexpr::interp("floor(3.1415)").unwrap(), 3.0);
     assert_eq!(tinyexpr::interp("ceil(3.1415)*floor(3.1415)").unwrap(), 12.0);
+    assert_eq!(tinyexpr::interp("5,2").unwrap(), 2.0);
 }
 
 #[test]
@@ -52,6 +54,4 @@ fn check_hyberbolic_trigs() {
 #[test]
 #[should_panic]
 fn parse_error()
-{
-    tinyexpr::interp("atan(foo)").unwrap();
-}
+{ tinyexpr::interp("atan(foo)").unwrap(); }
