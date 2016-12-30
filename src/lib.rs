@@ -1,4 +1,4 @@
-//! [TinyExpr](https://github.com/kondrak/codespawn) is a tiny recursive descent expression
+//! [TinyExpr](https://github.com/kondrak/tinyexpr-rs) is a tiny recursive descent expression
 //! parser, compiler, and evaluation engine for math expressions.
 //! This is a work in progress port of [TinyExpr](https://github.com/codeplea/tinyexpr) to Rust.
 //!
