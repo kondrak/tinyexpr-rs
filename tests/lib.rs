@@ -33,6 +33,7 @@ fn check_logarithms() {
 #[test]
 fn check_trigs() {
     assert_eq!(tinyexpr::interp("2*1/sin(3.14/2)").unwrap().round(), 2.0);
+    assert_eq!(tinyexpr::interp("asin(1)").unwrap(), tinyexpr::interp("pi/2").unwrap());
     assert_eq!(tinyexpr::interp("tan(pi)").unwrap().round(), 0.0);
     assert_eq!(tinyexpr::interp("atan(pi/2)").unwrap().round(), 1.0);
     assert_eq!(tinyexpr::interp("atan2(pi, 2)").unwrap().round(), 1.0);
@@ -47,3 +48,9 @@ fn check_hyberbolic_trigs() {
     assert_eq!(tinyexpr::interp("tanh(10000)").unwrap(), 1.0);
 }
 
+#[test]
+#[should_panic]
+fn parse_error()
+{
+    tinyexpr::interp("atan(foo)").unwrap();
+}

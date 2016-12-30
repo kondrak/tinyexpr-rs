@@ -1,3 +1,23 @@
+//! [TinyExpr](https://github.com/kondrak/codespawn) is a tiny recursive descent expression
+//! parser, compiler, and evaluation engine for math expressions.
+//! This is a work in progress port of [TinyExpr](https://github.com/codeplea/tinyexpr) to Rust.
+//!
+//! Current release only supports built-in system functions (trigonometry, algebraic operations, constants, etc.).
+//!
+//!# Quick Start
+//!
+//!```
+//!extern crate tinyexpr;
+//!
+//!fn main()
+//!{
+//!    // parse the expression and fetch result
+//!    let r = tinyexpr::interp("2+2*2").unwrap();
+//!
+//!    // should print "6"
+//!    println!("{:?}", r);
+//!}
+//!```
 #[macro_use]
 extern crate bitflags;
 pub mod error;
@@ -5,7 +25,9 @@ use error::Result;
 use std::f64::consts;
 use std::str::FromStr;
 
+#[doc(hidden)]
 bitflags! {
+    #[doc(hidden)]
     pub flags ExprType: u64 {
         const TE_VARIABLE = 0,
         const TE_CONSTANT = 1,
@@ -102,6 +124,7 @@ fn sqrt(a: f64, _: f64) -> f64 { a.sqrt() }
 fn tan(a: f64, _: f64) -> f64 { a.tan() }
 fn tanh(a: f64, _: f64) -> f64 { a.tanh() }
 
+#[doc(hidden)]
 #[derive(Debug)]
 pub struct Expr {
     pub e_type: ExprType,
@@ -136,6 +159,7 @@ impl Clone for Expr {
 }
 
 
+#[doc(hidden)]
 #[derive(Debug)]
 pub struct Variable {
     pub name: String,
@@ -496,7 +520,7 @@ fn optimize(n: &mut Expr) {
     }
 }
 
-pub fn compile(expression: &str, variables: Option<Vec<Variable>> ) -> Result<Option<Expr>> {
+fn compile(expression: &str, variables: Option<Vec<Variable>> ) -> Result<Option<Expr>> {
     let mut s = State::new(expression);
     if let Some(vars) = variables {
         s.lookup = vars;
@@ -514,6 +538,16 @@ pub fn compile(expression: &str, variables: Option<Vec<Variable>> ) -> Result<Op
     Ok(Some(root))
 }
 
+/// Interprets a string expression as a mathematical expresion, evaluates it and returns its result.
+///
+/// # Examples
+///
+/// ```
+/// extern crate tinyexpr;
+///
+/// // "result" should contain a "4"
+/// let result = tinyexpr::interp("2+2").unwrap();
+/// ```
 pub fn interp(expression: &str) -> Result<f64> {
     let e = try!(compile(expression, None));
 
@@ -525,14 +559,14 @@ pub fn interp(expression: &str) -> Result<f64> {
 }
 
 // todo
-pub fn eval(n: &Expr) -> f64 {
+fn eval(n: &Expr) -> f64 {
     match type_mask!(n.e_type) {
         TE_CONSTANT => n.value,
         TE_VARIABLE => n.bound as f64,
         TE_FUNCTION0 | TE_FUNCTION1 | TE_FUNCTION2 | TE_FUNCTION3 |
         TE_FUNCTION4 | TE_FUNCTION5 | TE_FUNCTION6 | TE_FUNCTION7 => {
             match arity!(n.e_type) {
-                // todo: really need more function pointer types to avoid hacks like this 0.0 here...
+                // todo: REALLY need more function pointer types to avoid hacks like this 0.0 here...
                 0 => ((*n).function)(0.0, 0.0),
                 1 => ((*n).function)(eval(&n.parameters[0]), 0.0),
                 2 => ((*n).function)(eval(&n.parameters[0]), eval(&n.parameters[1])),

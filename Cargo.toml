@@ -1,7 +1,7 @@
 [package]
 name = "tinyexpr"
-version = "0.1.0"
-description = "Tiny recursive descent expression parser, compiler, and evaluation engine for math expressions."
+version = "0.0.1"
+description = "Tiny recursive descent expression parser, compiler, and evaluation engine for math expressions. A work in progress port of TinyExpr library to Rust."
 keywords = ["tinyexpr", "math", "expression", "parser"]
 license = "MIT/Apache-2.0"
 authors = ["Krzysztof Kondrak <krzysztof.kondrak@gmail.com>"]
