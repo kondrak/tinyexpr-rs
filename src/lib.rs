@@ -370,7 +370,7 @@ fn base(s: &mut State) -> Result<Expr> {
                 let mut idx = 0;
                 for i in 0..arity {
                     try!(next_token(s));
-                    // todo: set parameters
+                    ret.parameters.push(try!(expr(s)));
                     if s.s_type != TOK_SEP {
                         break;
                     }
@@ -533,9 +533,10 @@ pub fn eval(n: &Expr) -> f64 {
         TE_FUNCTION4 | TE_FUNCTION5 | TE_FUNCTION6 | TE_FUNCTION7 => {
             match arity!(n.e_type) {
                 // todo: really need more function pointer types to avoid hacks like this 0.0 here...
+                0 => ((*n).function)(0.0, 0.0),
                 1 => ((*n).function)(eval(&n.parameters[0]), 0.0),
                 2 => ((*n).function)(eval(&n.parameters[0]), eval(&n.parameters[1])),
-                _ => panic!("todo: different f. pointers")
+                _ => panic!("todo: add more f. pointers (type is {})", arity!(n.e_type))
             }
         }
         _ => 0.0
