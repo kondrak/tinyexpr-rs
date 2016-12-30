@@ -3,6 +3,7 @@
 //! This is a work in progress port of [TinyExpr](https://github.com/codeplea/tinyexpr) to Rust.
 //!
 //! Current release only supports built-in system functions (trigonometry, algebraic operations, constants, etc.).
+//! See the `tests` module for more examples.
 //!
 //!# Quick Start
 //!

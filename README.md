@@ -9,7 +9,7 @@
 
 Tiny recursive descent expression parser, compiler, and evaluation engine for math expressions.
 
-This is a WIP port of [TinyExpr](https://github.com/codeplea/tinyexpr) to Rust. Current release only supports built-in system functions (trigonometry, algebraic operations, constants, etc.).
+This is a WIP port of [TinyExpr](https://github.com/codeplea/tinyexpr) to Rust. Current release only supports built-in system functions (trigonometry, algebraic operations, constants, etc.). See the `tests` module for more examples.
 
 [Documentation](https://docs.rs/tinyexpr)
 
