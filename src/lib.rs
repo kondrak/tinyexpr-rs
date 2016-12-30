@@ -58,7 +58,7 @@ bitflags! {
         const TOK_NUMBER   = 30,
         const TOK_VARIABLE = 31,
         const TOK_INFIX    = 32,
-        const T_MASK       =  0x0000001F
+        const T_MASK       = 0x0000001F
     }
 }
 
