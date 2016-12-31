@@ -45,8 +45,8 @@ cargo run --example tinyexpr
 ```
 
 ## Todo
-- support for custom user function
-- support for functions taking more than 2 parameters
+- support custom user function
+- support functions taking more than 2 parameters
 - support closures
 
 ## License
