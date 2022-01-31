@@ -2,8 +2,7 @@
 
 [![Crates.io](https://img.shields.io/crates/v/tinyexpr.svg)](https://crates.io/crates/tinyexpr)
 [![Documentation](https://docs.rs/tinyexpr/badge.svg)](https://docs.rs/tinyexpr)
-[![Build Status](https://travis-ci.org/kondrak/tinyexpr-rs.svg)](https://travis-ci.org/kondrak/tinyexpr-rs)
-[![Build status](https://ci.appveyor.com/api/projects/status/gmkbjqne3be843is?svg=true)](https://ci.appveyor.com/project/kondrak/tinyexpr-rs)
+[![Build Status](https://img.shields.io/github/workflow/status/kondrak/tinyexpr-rs/CI?logo=github)](https://github.com/kondrak/tinyexpr-rs/actions?query=workflow%3ACI)
 [![Coverage Status](https://coveralls.io/repos/github/kondrak/tinyexpr-rs/badge.svg?branch=master)](https://coveralls.io/github/kondrak/tinyexpr-rs?branch=master)
 ![](https://img.shields.io/crates/l/json.svg)
 

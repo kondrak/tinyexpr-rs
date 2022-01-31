@@ -8,7 +8,7 @@ use std::num::ParseFloatError;
 /// Result type used throughout the crate.
 pub type Result<T> = result::Result<T, TinyExprError>;
 
-/// Error type for codespawn crate.
+/// Error type for tinyexpr-rs crate.
 #[derive(Debug)]
 pub enum TinyExprError {
     /// Parse error
